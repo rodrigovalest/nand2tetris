@@ -1,0 +1,23 @@
+CHIP Zero {
+    IN in[16], sel;
+    OUT out[16];
+
+    PARTS:
+    Not (in=sel, out=notsel);
+    And (a=in[0], b=notsel, out=out[0]);
+    And (a=in[1], b=notsel, out=out[1]);
+    And (a=in[2], b=notsel, out=out[2]);
+    And (a=in[3], b=notsel, out=out[3]);
+    And (a=in[4], b=notsel, out=out[4]);
+    And (a=in[5], b=notsel, out=out[5]);
+    And (a=in[6], b=notsel, out=out[6]);
+    And (a=in[7], b=notsel, out=out[7]);
+    And (a=in[8], b=notsel, out=out[8]);
+    And (a=in[9], b=notsel, out=out[9]);
+    And (a=in[10], b=notsel, out=out[10]);
+    And (a=in[11], b=notsel, out=out[11]);
+    And (a=in[12], b=notsel, out=out[12]);
+    And (a=in[13], b=notsel, out=out[13]);
+    And (a=in[14], b=notsel, out=out[14]);
+    And (a=in[15], b=notsel, out=out[15]);
+}

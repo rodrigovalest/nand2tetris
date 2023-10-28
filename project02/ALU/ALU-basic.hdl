@@ -1,0 +1,29 @@
+CHIP ALU-basic {
+    IN  
+        x[16], y[16],
+        zx,
+        nx,
+        zy,
+        ny,
+        f,
+        no;
+    OUT 
+        out[16];
+
+    PARTS:
+    // zero, negate x
+    Zero (in=x, sel=zx, out=zerox);
+    Flip (in=zerox, sel=nx, out=flipx);
+
+    // zero, negate y
+    Zero (in=y, sel=zy, out=zeroy);
+    Flip (in=zeroy, sel=ny, out=flipy);
+
+    // add, and bitwise
+    Add16 (a=flipx, b=flipy, out=aaddb);
+    And16 (a=flipx, b=flipy, out=aandb);
+    Mux16 (a=aandb, b=aaddb, sel=f, out=result);
+
+    // or bitwise
+    Flip (in=result, sel=no, out=out);
+}
