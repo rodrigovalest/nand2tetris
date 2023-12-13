@@ -11,6 +11,12 @@
 //      counter++
 //      R2=R2+R0
 
+@R2
+M=0
+
+@counter
+M=0
+
 (LOOP)
     @R1  // if (counter != R1) goto END
     D=M
