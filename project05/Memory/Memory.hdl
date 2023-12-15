@@ -1,0 +1,32 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/Memory.hdl
+/** 
+ * The Memory chip implements the complete address space of the Hack data memory,
+ * including the RAM and memory mapped I/O.
+ * Outputs the value of the memory location specified by the address input.
+ * If (load == 1), sets the memory location specified by the address input
+ * to the value of the in input.
+ * Address space rules:
+ * Only the upper 16K + 8K + 1 words of the memory are used.
+ * Access to address 0 to 16383 results in accessing the RAM;
+ * Access to address 16384 to 24575 results in accessing the Screen memory map;
+ * Access to address 24576 results in accessing the Keyboard memory map.
+ */ 
+CHIP Memory {
+    IN in[16], load, address[15];
+    OUT out[16];
+
+    PARTS:
+    DMux (in=load, sel=address[0], a=dmux1a, b=dmux1b);
+
+    RAM16K (in=in, load=dmux1a, address=address[1..14], out=memory);
+    DMux (in=dmux1b, sel=address[1], a=dmux2a, b=dmux2b);
+
+    RAM8K (in=in, load=dmux2a, address=address, out=screenmemory);
+    Register (in=in, load=dmux2b, out=keyboardmemory);
+
+    Mux16 (a=screenmemory, b=keyboardmemory, sel=address[1], out=mux1);
+    Mux16 (a=memory, b=mux1, sel=address[0], out=out);
+}
