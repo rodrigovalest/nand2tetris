@@ -1,6 +1,0 @@
-    linha1
-linha2
-   linha3
-// comment4
-linha5 // comment
-// comment4
