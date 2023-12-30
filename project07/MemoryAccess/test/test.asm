@@ -1,0 +1,54 @@
+// instantiating default segments
+@256
+D=A
+@SP
+M=D
+@300
+D=A
+@LCL
+M=D
+@400
+D=A
+@ARG
+M=D
+@3000
+D=A
+@THIS
+M=D
+@3010
+D=A
+@THAT
+M=D
+// push constant 5
+@5
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// push constant 5
+@5
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// pop ARG 10
+@ARG
+D=M
+@10
+D=D+A
+@2999
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@2999
+A=M
+M=D
+(LOOP)
+@LOOP
+0;JMP
