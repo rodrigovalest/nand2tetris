@@ -5,6 +5,15 @@ class CodeWriter:
         self.lt = 0
         self.get = 0
 
+    def stringfy(self, commands):
+        string = ""
+
+        for command in commands:
+            string = string + command + "\n"
+
+        return string
+
+
     def set_register(self, register, value):
         return [
             f"@{value}",
