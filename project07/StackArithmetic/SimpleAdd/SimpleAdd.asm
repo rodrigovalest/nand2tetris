@@ -19,36 +19,31 @@ M=D
 D=A
 @THAT
 M=D
-// push constant 5
-@5
+// push constant 7
+@7
 D=A
 @SP
 A=M
 M=D
 @SP
 M=M+1
-// push constant 5
-@5
+// push constant 8
+@8
 D=A
 @SP
 A=M
 M=D
 @SP
 M=M+1
-// pop ARG 10
-@ARG
-D=M
-@10
-D=D+A
-@2999
-M=D
+// add
 @SP
 M=M-1
 A=M
 D=M
-@2999
+@SP
 A=M
-M=D
+A=A-1
+M=M+D
 (LOOP)
 @LOOP
 0;JMP

@@ -62,7 +62,41 @@ M=D
 
 POINTER
 
+push pointer 0
+@THIS
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+pop pointer 0
+@SP
+M=M-1
+A=M
+D=M
+@THIS
+M=D
+
 STATIC
+
+push static 12
+@filename.12
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+
+pop static 10
+@SP
+M=M-1
+A=M
+D=M
+@filename.10
+M=D
 
 --- ARITHMETIC AND LOGICAL COMMANDS ---
 
@@ -88,6 +122,7 @@ M=M-D
 
 NEG
 @SP
+A=M
 A=A-1
 M=-M
 

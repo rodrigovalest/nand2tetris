@@ -4,7 +4,7 @@ import Dicts
 class CodeWriter:
     def to_binary(self, instruction):
         if instruction == None:
-                return
+            return
 
         if instruction.startswith("@"):
             instruction = instruction.replace("@", "")

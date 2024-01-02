@@ -1,10 +1,9 @@
 class CodeWriter:
-    eq = 0
-    lt = 0
-    get = 0
-
     def __init__(self, filename):
         self.filename = filename
+        self.eq = 0
+        self.lt = 0
+        self.get = 0
 
     def set_register(self, register, value):
         return [
@@ -49,7 +48,6 @@ class CodeWriter:
     
     def pop_segment(self, segment, address):
         RANDOM = 2999
-
         return [
             f"// pop {segment} {address}",
             f"@{segment}",
@@ -103,11 +101,7 @@ class CodeWriter:
                     "M=M+1"
                 ]
             elif line[1] == "pointer":
-                this_or_that = "THAT"
-
-                if line[2] == "0":
-                    this_or_that = "THIS"
-                
+                this_or_that = "THAT" if line[2] == "0" else "THIS" 
                 return [
                     f"// push pointer {line[2]}",
                     f"@{this_or_that}",
@@ -150,11 +144,7 @@ class CodeWriter:
                     "M=D"
                 ]
             elif line[1] == "pointer":
-                this_or_that = "THAT"
-
-                if line[2] == "0":
-                    this_or_that = "THIS"
-                
+                this_or_that = "THAT" if line[2] == "0" else "THIS" 
                 return [
                     f"// pop pointer {line[2]}",                    
                     "@SP",
@@ -172,7 +162,30 @@ class CodeWriter:
                 return self.pop_segment("THIS", line[2])
             elif line[1] == "that":
                 return self.pop_segment("THAT", line[2])
-            
+    
+    def conditional_logical_command(self, name, label, condition, counter):
+        return [
+            f"// {name}",
+            "@SP",
+            "M=M-1",
+            "A=M",
+            "D=M",
+            "A=A-1",
+            "D=M-D",
+            f"@{label}{counter}",
+            f"D;{condition}",
+            "@SP",
+            "A=M-1",
+            "M=0",
+            f"@END{label}{counter}",
+            "0;JMP",
+            f"({label}{counter})",
+            "@SP",
+            "A=M-1",
+            "M=-1",
+            f"(END{label}{counter})"
+        ]
+
     def arithmetic_logical_command(self, line):
         if line[0] == "add":
             return [
@@ -202,6 +215,7 @@ class CodeWriter:
             return [
                 f"// {line[0]}",
                 "@SP",
+                "A=M",
                 "A=A-1",
                 "M=-M"
             ]
@@ -209,6 +223,7 @@ class CodeWriter:
             return [
                 f"// {line[0]}",
                 "@SP",
+                "A=M",
                 "A=A-1",
                 "M=!M"
             ]
@@ -234,76 +249,13 @@ class CodeWriter:
             ]
         elif line[0] == "eq":
             self.eq += 1
-
-            return [
-                f"// eq",
-                "@SP",
-                "M=M-1",
-                "A=M",
-                "D=M",
-                "A=A-1",
-                "D=M-D",
-                f"@EQUAL{self.eq}",
-                "D;JEQ",
-                "@SP",
-                "A=M-1",
-                "M=0",
-                f"@ENDEQ{self.eq}",
-                "0;JMP",
-                f"(EQUAL{self.eq})",
-                "@SP",
-                "A=M-1",
-                "M=-1",
-                f"(ENDEQ{self.eq})"
-            ]
-        elif line[0] == "get":
+            return self.conditional_logical_command("eq", "EQUAL", "JEQ", self.eq)
+        elif line[0] == "gt":
             self.get += 1
-
-            return [
-                f"// gt",
-                "@SP",
-                "M=M-1",
-                "A=M",
-                "D=M",
-                "A=A-1",
-                "D=M-D",
-                f"@GREATER{self.gt}",
-                "D;JGT",
-                "@SP",
-                "A=M-1",
-                "M=0",
-                f"@ENDGREATER{self.gt}",
-                "0;JMP",
-                f"(GREATER{self.gt})",
-                "@SP",
-                "A=M-1",
-                "M=-1",
-                f"(ENDGREATER{self.gt})"
-            ]
+            return self.conditional_logical_command("gt", "GREATER", "JGT", self.get)
         elif line[0] == "lt":
             self.lt += 1
-
-            return [
-                f"// lt",
-                "@SP",
-                "M=M-1",
-                "A=M",
-                "D=M",
-                "A=A-1",
-                "D=M-D",
-                f"@LESS{self.lt}",
-                "D;JLT",
-                "@SP",
-                "A=M-1",
-                "M=0",
-                f"@ENDLESS{self.lt}",
-                "0;JMP",
-                f"(LESS{self.lt})",
-                "@SP",
-                "A=M-1",
-                "M=-1",
-                f"(ENDLESS{self.lt})"
-            ]
+            return self.conditional_logical_command("lt", "LESS", "JLT", self.lt)
     
     def code(self, line):
         if len(line) == 1:
