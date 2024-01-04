@@ -27,7 +27,7 @@ A=M
 M=D
 @SP
 M=M+1
-// pop LCL 0
+// pop local 0
 @LCL
 D=M
 @0
@@ -57,7 +57,7 @@ A=M
 M=D
 @SP
 M=M+1
-// pop ARG 2
+// pop argument 2
 @ARG
 D=M
 @2
@@ -71,7 +71,7 @@ D=M
 @2999
 A=M
 M=D
-// pop ARG 1
+// pop argument 1
 @ARG
 D=M
 @1
@@ -93,7 +93,7 @@ A=M
 M=D
 @SP
 M=M+1
-// pop THIS 6
+// pop this 6
 @THIS
 D=M
 @6
@@ -123,7 +123,7 @@ A=M
 M=D
 @SP
 M=M+1
-// pop THAT 5
+// pop that 5
 @THAT
 D=M
 @5
@@ -137,7 +137,7 @@ D=M
 @2999
 A=M
 M=D
-// pop THAT 2
+// pop that 2
 @THAT
 D=M
 @2
@@ -167,7 +167,7 @@ A=M
 D=M
 @11
 M=D
-// push LCL 0
+// push local 0
 @LCL
 D=M
 @0
@@ -178,7 +178,7 @@ A=M
 M=D
 @SP
 M=M+1
-// push THAT 5
+// push that 5
 @THAT
 D=M
 @5
@@ -198,7 +198,7 @@ D=M
 A=M
 A=A-1
 M=M+D
-// push ARG 1
+// push argument 1
 @ARG
 D=M
 @1
@@ -218,7 +218,7 @@ D=M
 A=M
 A=A-1
 M=M-D
-// push THIS 6
+// push this 6
 @THIS
 D=M
 @6
@@ -229,7 +229,7 @@ A=M
 M=D
 @SP
 M=M+1
-// push THIS 6
+// push this 6
 @THIS
 D=M
 @6
@@ -275,6 +275,7 @@ D=M
 A=M
 A=A-1
 M=M+D
-(LOOP)
-@LOOP
+// final loop
+(FINALLOOP)
+@FINALLOOP
 0;JMP

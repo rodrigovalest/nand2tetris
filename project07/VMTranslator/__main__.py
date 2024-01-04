@@ -2,35 +2,26 @@ import sys
 from Parser import Parser
 from CodeWriter import CodeWriter
 
-full_filename = sys.argv[1]
+full_vmfilename = sys.argv[1]
 
-if not full_filename:
-    print("Usage: python3 VMTranslator <input_file.vm>")
-    sys.exit(1)
+if not full_vmfilename or not ".vm" in full_vmfilename:
+    print("Usage: python3 VMTranslator <vmfile.vm>")
 
-filename = full_filename.split("/")[-1].replace(".vm", "")
+full_asmfilename = full_vmfilename.replace(".vm", ".asm")
 
-parser = Parser()
-codeWriter = CodeWriter(filename)
+with open(full_vmfilename, "r") as vmfile:
+    parser = Parser(vmfile)
+    codeWriter = CodeWriter(full_asmfilename)
 
-with open(full_filename, "r") as vmfile:
-    full_filename = full_filename.replace(".vm", "")
+    codeWriter.initialize_default_segments()
 
-    with open(full_filename + ".asm", "w") as asmfile:
-        asmfile.write("// instantiating default segments\n")
+    while parser.hasMoreCommands():
+        parser.advance()
 
-        default_segments_code = codeWriter.initialize_segments()
-        default_segments_code = codeWriter.stringfy(default_segments_code)
-        asmfile.write(default_segments_code)
+        if parser.commandType() == "C_ARITHMETIC":
+            codeWriter.writeArithmetic(parser.arg1())
+        elif parser.commandType() == "C_PUSH" or parser.commandType() == "C_POP":
+            codeWriter.writePushPop(parser.commandType(), parser.arg1(), parser.arg2())
 
-        for line in vmfile:
-            line = parser.parse(line)
-
-            if line:
-                codes = codeWriter.code(line)
-                codes = codeWriter.stringfy(codes)
-                asmfile.write(codes)
-
-        final_loop_code = codeWriter.final_loop()
-        final_loop_code = codeWriter.stringfy(final_loop_code)
-        asmfile.write(final_loop_code)
+    codeWriter.final_loop()
+    codeWriter.close()

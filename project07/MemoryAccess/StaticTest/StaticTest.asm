@@ -106,6 +106,7 @@ D=M
 A=M
 A=A-1
 M=M+D
-(LOOP)
-@LOOP
+// final loop
+(FINALLOOP)
+@FINALLOOP
 0;JMP

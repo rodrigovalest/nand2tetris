@@ -57,7 +57,7 @@ A=M
 M=D
 @SP
 M=M+1
-// pop THIS 2
+// pop this 2
 @THIS
 D=M
 @2
@@ -79,7 +79,7 @@ A=M
 M=D
 @SP
 M=M+1
-// pop THAT 6
+// pop that 6
 @THAT
 D=M
 @6
@@ -118,7 +118,7 @@ D=M
 A=M
 A=A-1
 M=M+D
-// push THIS 2
+// push this 2
 @THIS
 D=M
 @2
@@ -138,7 +138,7 @@ D=M
 A=M
 A=A-1
 M=M-D
-// push THAT 6
+// push that 6
 @THAT
 D=M
 @6
@@ -158,6 +158,7 @@ D=M
 A=M
 A=A-1
 M=M+D
-(LOOP)
-@LOOP
+// final loop
+(FINALLOOP)
+@FINALLOOP
 0;JMP
