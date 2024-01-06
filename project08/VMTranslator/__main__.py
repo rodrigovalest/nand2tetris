@@ -1,27 +1,88 @@
+import os
 import sys
 from Parser import Parser
 from CodeWriter import CodeWriter
 
-full_vmfilename = sys.argv[1]
+def translate_single_vm(vm_filename):
+    full_asmfilename = vm_filename.replace(".vm", ".asm")
 
-if not full_vmfilename or not ".vm" in full_vmfilename:
-    print("Usage: python3 VMTranslator <vmfile.vm>")
+    with open(vm_filename, "r") as vmfile:
+        parser = Parser(vmfile)
+        codeWriter = CodeWriter(full_asmfilename)
 
-full_asmfilename = full_vmfilename.replace(".vm", ".asm")
+        codeWriter.write_init()
 
-with open(full_vmfilename, "r") as vmfile:
-    parser = Parser(vmfile)
-    codeWriter = CodeWriter(full_asmfilename)
+        while parser.has_more_commands():
+            parser.advance()
 
-    codeWriter.initialize_default_segments()
+            if parser.command_type() == "C_ARITHMETIC":
+                codeWriter.write_arithmetic(parser.arg1())
+            elif parser.command_type() == "C_PUSH" or parser.command_type() == "C_POP":
+                codeWriter.write_push_pop(parser.command_type(), parser.arg1(), parser.arg2())
+            elif parser.command_type() == "C_LABEL":
+                codeWriter.write_label(parser.arg1())
+            elif parser.command_type() == "C_GOTO":
+                codeWriter.write_goto(parser.arg1())
+            elif parser.command_type() == "C_IF":
+                codeWriter.write_if(parser.arg1())
+            elif parser.command_type() == "C_FUNCTION":
+                codeWriter.write_function(parser.arg1(), parser.arg2())
+            elif parser.command_type() == "C_CALL":
+                codeWriter.write_call(parser.arg1(), parser.arg2())
+            elif parser.command_type() == "C_RETURN":
+                codeWriter.write_return()
 
-    while parser.hasMoreCommands():
-        parser.advance()
+        codeWriter.close()
 
-        if parser.commandType() == "C_ARITHMETIC":
-            codeWriter.writeArithmetic(parser.arg1())
-        elif parser.commandType() == "C_PUSH" or parser.commandType() == "C_POP":
-            codeWriter.writePushPop(parser.commandType(), parser.arg1(), parser.arg2())
+def translate_vm_files(directory):
+    asm_filename = os.path.join(directory, os.path.basename(directory.rstrip('/')) + ".asm")
 
-    codeWriter.final_loop()
-    codeWriter.close()
+    with open(asm_filename, "w") as asmfile:
+        codeWriter = CodeWriter(asm_filename)
+        codeWriter.write_init()
+
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                if file.endswith(".vm"):
+                    vm_filename = os.path.join(root, file)
+                    with open(vm_filename, "r") as vmfile:
+                        parser = Parser(vmfile)
+
+                        while parser.has_more_commands():
+                            parser.advance()
+
+                            if parser.command_type() == "C_ARITHMETIC":
+                                codeWriter.write_arithmetic(parser.arg1())
+                            elif parser.command_type() == "C_PUSH" or parser.command_type() == "C_POP":
+                                codeWriter.write_push_pop(parser.command_type(), parser.arg1(), parser.arg2())
+                            elif parser.command_type() == "C_LABEL":
+                                codeWriter.write_label(parser.arg1())
+                            elif parser.command_type() == "C_GOTO":
+                                codeWriter.write_goto(parser.arg1())
+                            elif parser.command_type() == "C_IF":
+                                codeWriter.write_if(parser.arg1())
+                            elif parser.command_type() == "C_FUNCTION":
+                                codeWriter.write_function(parser.arg1(), parser.arg2())
+                            elif parser.command_type() == "C_CALL":
+                                codeWriter.write_call(parser.arg1(), parser.arg2())
+                            elif parser.command_type() == "C_RETURN":
+                                codeWriter.write_return()
+
+        codeWriter.close()
+
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: python3 VMTranslator <vmfile.vm or directory>")
+        return
+
+    input_path = sys.argv[1]
+
+    if os.path.isfile(input_path) and input_path.endswith(".vm"):
+        translate_single_vm(input_path)
+    elif os.path.isdir(input_path):
+        translate_vm_files(input_path)
+    else:
+        print("Invalid input. Please provide a .vm file or a directory containing .vm files.")
+
+if __name__ == "__main__":
+    main()

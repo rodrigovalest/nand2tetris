@@ -6,7 +6,18 @@ class CodeWriter:
 
     # API
         
-    def writeArithmetic(self, command):
+    def write_init(self):
+        self.file.write("// bootstrap code\n")
+        self.file.write("@256\n")
+        self.file.write("D=A\n")
+        self.file.write("@SP\n")
+        self.file.write("M=D\n")
+
+        self.write_call("Sys.init", 0)
+
+        return
+        
+    def write_arithmetic(self, command):
         self.file.write(f"// {command}\n")
 
         if command == "add":
@@ -60,7 +71,7 @@ class CodeWriter:
 
         return
 
-    def writePushPop(self, command, segment, index):
+    def write_push_pop(self, command, segment, index):
         index = int(index)
         
         if command == "C_PUSH":
@@ -146,9 +157,175 @@ class CodeWriter:
                 self.pop_segment("THAT", index)
 
         return
+    
+    def write_label(self, label):
+        self.file.write(f"// label {label}\n")
+        self.file.write(f"({label})\n")
+
+        return
+    
+    def write_goto(self, label):
+        self.file.write(f"// goto {label}\n")
+        self.file.write(f"@{label}\n")
+        self.file.write(f"0;JMP\n")
+
+        return
+    
+    def write_if(self, label):
+        self.file.write(f"// if-goto {label}\n")
+        self.file.write("@SP\n")
+        self.file.write("M=M-1\n")
+        self.file.write("A=M\n")
+        self.file.write("D=M\n")
+        self.file.write(f"@{label}\n")
+        self.file.write(f"D;JNE\n")
+
+        return
+    
+    def write_function(self, function_name, num_vars):
+        num_vars = int(num_vars)
+
+        self.file.write(f"// function {function_name} {num_vars}\n")
+        self.file.write(f"({function_name})\n")
+
+        for i in range(num_vars):
+            self.file.write("@SP\n")
+            self.file.write("A=M\n")
+            self.file.write("M=0\n")
+            self.file.write("@SP\n")
+            self.file.write("M=M+1\n")
+        
+        return
+    
+    def write_call(self, function_name, num_args):
+        self.label_count += 1
+
+        self.file.write(f"// call {function_name} {num_args}\n")
+        self.file.write(f"@RETURN{self.label_count}\n")
+        self.file.write("D=A\n")
+        self.file.write("@SP\n")
+        self.file.write("A=M\n")
+        self.file.write("M=D\n")
+        self.file.write("@SP\n")
+        self.file.write("M=M+1\n")
+
+        segments = ["LCL", "ARG", "THIS", "THAT"]
+        for segment in segments:
+            self.file.write(f"@{segment}\n")
+            self.file.write("D=M\n")
+            self.file.write("@SP\n")
+            self.file.write("A=M\n")
+            self.file.write("M=D\n")
+            self.file.write("@SP\n")
+            self.file.write("M=M+1\n")
+
+        self.file.write("@SP\n")
+        self.file.write("D=M\n")
+        self.file.write("@5\n")
+        self.file.write("D=D-A\n")
+        self.file.write(f"@{num_args}\n")
+        self.file.write("D=D-A\n")
+        self.file.write("@ARG\n")
+        self.file.write("M=D\n")
+
+        self.file.write("@SP\n")
+        self.file.write("D=M\n")
+        self.file.write("@LCL\n")
+        self.file.write("M=D\n")
+
+        self.file.write(f"@{function_name}\n")
+        self.file.write("0;JMP\n")
+
+        self.file.write(f"(RETURN{self.label_count})\n")
+
+        return
+    
+    def write_return(self):
+        self.file.write("// return\n")
+        
+        self.file.write("// endFrame = LCL\n")
+        self.file.write("@LCL\n")
+        self.file.write("D=M\n")
+        self.file.write("@R13\n")
+        self.file.write("M=D\n")
+        
+        self.file.write("// returnAddress = *(endFrame - 5)\n")
+        self.file.write("@R13\n")
+        self.file.write("D=M\n")
+        self.file.write("@5\n")
+        self.file.write("D=D-A\n")
+        self.file.write("A=D\n")
+        self.file.write("D=M\n")
+        self.file.write("@R14\n")
+        self.file.write("M=D\n")
+
+        self.file.write("// *ARG = pop()\n")
+        self.file.write("@SP\n")
+        self.file.write("M=M-1\n")
+        self.file.write("A=M\n")
+        self.file.write("D=M\n")
+        self.file.write("@ARG\n")
+        self.file.write("A=M\n")
+        self.file.write("M=D\n")
+
+        self.file.write("// SP = ARG + 1\n")
+        self.file.write("@ARG\n")
+        self.file.write("D=M+1\n")
+        self.file.write("@SP\n")
+        self.file.write("M=D\n")
+
+        self.file.write("// THAT = *(endFrame - 1)\n")
+        self.file.write("@R13\n")
+        self.file.write("D=M-1\n")
+        self.file.write("A=D\n")
+        self.file.write("D=M\n")
+        self.file.write("@THAT\n")
+        self.file.write("M=D\n")
+
+        self.file.write("// THIS = *(endFrame - 2)\n")
+        self.file.write("@2\n")
+        self.file.write("D=A\n")
+        self.file.write("@R13\n")
+        self.file.write("D=M-D\n")
+        self.file.write("A=D\n")
+        self.file.write("D=M\n")
+        self.file.write("@THIS\n")
+        self.file.write("M=D\n")
+
+        self.file.write("// ARG = *(endFrame - 3)\n")
+        self.file.write("@3\n")
+        self.file.write("D=A\n")
+        self.file.write("@R13\n")
+        self.file.write("D=M-D\n")
+        self.file.write("A=D\n")
+        self.file.write("D=M\n")
+        self.file.write("@ARG\n")
+        self.file.write("M=D\n")
+
+        self.file.write("// LCL = *(endFrame - 4)\n")
+        self.file.write("@4\n")
+        self.file.write("D=A\n")
+        self.file.write("@R13\n")
+        self.file.write("D=M-D\n")
+        self.file.write("A=D\n")
+        self.file.write("D=M\n")
+        self.file.write("@LCL\n")
+        self.file.write("M=D\n")
+
+        self.file.write("// goto returnAddress\n")
+        self.file.write("@R14\n")
+        self.file.write("A=M\n")
+        self.file.write("0;JMP\n")
+
+        return
 
     def close(self):
+        self.file.write("// final loop\n")
+        self.file.write("(FINALLOOP)\n")
+        self.file.write("@FINALLOOP\n")
+        self.file.write("0;JMP\n")
         self.file.close()
+        
         return
     
     # END API
@@ -158,25 +335,6 @@ class CodeWriter:
         self.file.write("D=A\n")
         self.file.write(f"@{register}\n")
         self.file.write("M=D\n")
-        
-        return
-
-    def initialize_default_segments(self):
-        self.file.write("// instantiating default segments\n")
-
-        self.set_register("SP", 256)
-        self.set_register("LCL", 300)
-        self.set_register("ARG", 400)
-        self.set_register("THIS", 3000)
-        self.set_register("THAT", 3010)
-
-        return
-    
-    def final_loop(self):
-        self.file.write("// final loop\n")
-        self.file.write("(FINALLOOP)\n")
-        self.file.write("@FINALLOOP\n")
-        self.file.write("0;JMP\n")
         
         return
     
@@ -215,6 +373,7 @@ class CodeWriter:
     
     def conditional_command(self, condition):
         self.label_count += 1
+
         self.file.write(f"@SP\n")
         self.file.write("M=M-1\n")
         self.file.write("A=M\n")

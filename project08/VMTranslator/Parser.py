@@ -6,7 +6,7 @@ class Parser:
 
     # API
 
-    def hasMoreCommands(self):
+    def has_more_commands(self):
         current_position = self.file.tell()
         next_line = self.file.readline()
         self.file.seek(current_position)
@@ -19,7 +19,7 @@ class Parser:
 
     def advance(self):
         line = self.file.readline() 
-        self.current_line = self.parse(line)
+        self.current_line = self.sanitize(line)
 
         if not self.current_line:
             self.advance()
@@ -27,30 +27,30 @@ class Parser:
         return
 
 
-    def commandType(self):
+    def command_type(self):
         return self.commands.get(self.current_line[0])
 
 
     def arg1(self):
-        if self.commandType() == "C_ARITHMETIC":
+        if self.command_type() == "C_ARITHMETIC":
             return self.current_line[0]
-        elif self.commandType() == "C_RETURN":  
+        elif self.command_type() == "C_RETURN":  
             return
         else:
             return self.current_line[1]
 
 
     def arg2(self):
-        permitedTypes = ["C_PUSH", "C_POP", "C_FUNCTION", "C_CALL"]
+        permitedTypes = ["C_PUSH", "C_POP", "C_FUNCTION", "C_CALL", "C_FUNCTION", "C_LABEL"]
 
-        if self.commandType() in permitedTypes:
+        if self.command_type() in permitedTypes:
             return self.current_line[2]
         
         return
 
     # END API
 
-    def parse(self, line):
+    def sanitize(self, line):
         line = line.strip()
 
         if not line or line.startswith("//"):

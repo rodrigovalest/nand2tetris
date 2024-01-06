@@ -24,7 +24,7 @@ A=M
 M=D
 @SP
 M=M+1
-
+44
 pop segment address
 @segment
 D=M
@@ -207,3 +207,18 @@ A=M-1
 M=-1
 (ENDLESSlt)
 
+--- PROGRAM FLOW COMMANDS ---
+
+IF-GOTO label
+@SP
+A=M-1
+D=M
+@label
+D;JNE
+
+GOTO label
+@label
+0;JMP
+
+LABEL label
+(label)
