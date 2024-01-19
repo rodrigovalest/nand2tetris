@@ -6,8 +6,8 @@ class JackTokenizer:
         self.__current_line = []
         self.__current_token = None
 
-        self.__KEYWORDS = ["class", "constructor", "function", "method", "field", "static", "var", "int", "char", "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while", "return"]
-        self.__SYMBOLS = ["{", "}", "(", ")", "[", "]", ".", ",", ";", "+", "-", "*", "/", "&", "|", "<", ">", "=", "~"]
+        self.__KEYWORDS = ("class", "constructor", "function", "method", "field", "static", "var", "int", "char", "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while", "return")
+        self.__SYMBOLS = ("{", "}", "(", ")", "[", "]", ".", ",", ";", "+", "-", "*", "/", "&", "|", "<", ">", "=", "~")
 
     #####
     # API
@@ -85,10 +85,10 @@ class JackTokenizer:
     # END API
     #########
     
+    # Separate tokens
     def __sanitize(self, line):
         line = line.strip()
 
-        # Remove comments
         line = re.sub(r'//.*', '', line)
         line = re.sub(r'/\*.*?\*/', '', line, flags=re.DOTALL)
 
@@ -97,7 +97,6 @@ class JackTokenizer:
             self.current_token = None
             return None
 
-        # Regex to separate tokens
         tokens = re.findall(r'".*?"|\b\w+\b|[^\w\s]', line)
         return tokens
     

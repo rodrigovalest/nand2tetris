@@ -5,28 +5,32 @@
 import os
 import sys
 from JackTokenizer import JackTokenizer
-
+from CompilationEngine import CompilationEngine
 
 def single_jack(filename):
     with open(filename, "r") as jackfile:
-        jackTokenizer = JackTokenizer(jackfile)
+        tokenizer = JackTokenizer(jackfile)
 
-        while(jackTokenizer.has_more_tokens()):
-            jackTokenizer.advance()
-            print(jackTokenizer.get_current_token())
+        xmlfilename = filename.replace()
+        parser = CompilationEngine(tokenizer, )
+
+        while(tokenizer.has_more_tokens()):
+            tokenizer.advance()
+            print(tokenizer.get_current_token())
             
-            type = jackTokenizer.token_type()
+            type = tokenizer.token_type()
+            
             if (type == "IDENTIFIER"):
-                print(jackTokenizer.identifier())
+                print(tokenizer.identifier())
             elif (type == "INT_CONST"):
-                print(jackTokenizer.int_val())
+                print(tokenizer.int_val())
             elif (type == "KEYWORD"):
-                print(jackTokenizer.keyword())
+                print(tokenizer.keyword())
             elif (type == "STRING_CONST"):
-                print(jackTokenizer.string_val())
+                print(tokenizer.string_val())
             elif (type == "SYMBOL"):
-                print(jackTokenizer.symbol())
-                
+                print(tokenizer.symbol())
+
             print("\n")
 
 
