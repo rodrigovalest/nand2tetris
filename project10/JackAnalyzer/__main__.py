@@ -1,27 +1,20 @@
 #################
-# Jack Analyzer #      
+# Jack Analyzer #
 #################
 
 import os
 import sys
 from JackTokenizer import JackTokenizer
-from CompilationEngine import CompilationEngine
 
 
 def single_jack(filename):
     with open(filename, "r") as jackfile:
         jackTokenizer = JackTokenizer(jackfile)
-        compilationEngine = CompilationEngine(jackfile)
 
-        while (jackTokenizer.has_more_tokens()):
+        while(jackTokenizer.has_more_tokens()):
             jackTokenizer.advance()
-            print(jackTokenizer.current_token)
-            print(jackTokenizer.token_type())
+            print(jackTokenizer.get_current_token())
 
-            if (jackTokenizer.token_type() == "KEYWORD"):
-                print(jackTokenizer.keyword())
-
-    return
 
 def main():
     if len(sys.argv) != 2:
