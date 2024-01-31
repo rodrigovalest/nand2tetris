@@ -38,9 +38,6 @@ class SymbolTable:
             raise SystemExit("ERROR: symbol table define") 
 
         self.__kind_count[kind] += 1
-        
-        print(self.__class_table)
-        print(self.__subroutine_table)
 
 
     def var_count(self, kind):

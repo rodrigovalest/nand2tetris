@@ -1,0 +1,17 @@
+function Main.main 1
+push argument 0
+pop pointer 0
+pop local 1
+call Keyboard.readInt 1
+pop local 0
+push local 1
+call Array.new 1
+pop local 2
+push constant 0
+label L0
+push local 2
+push local 1
+lt
+not
+if-goto L1
+pop local 0

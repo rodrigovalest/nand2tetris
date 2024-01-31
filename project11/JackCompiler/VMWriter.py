@@ -49,9 +49,9 @@ class VMWriter:
             return
         
         if command == "mult":
-            command = "Math.multiply"
+            command = "call Math.multiply 2"
         elif command == "div":
-            command = "Math.divide"
+            command = "call Math.divide 2"
         
         self.__file.write(f"{command}\n")
 

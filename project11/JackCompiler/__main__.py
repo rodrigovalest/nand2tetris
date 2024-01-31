@@ -16,6 +16,27 @@ def single_jack(filename):
         symbol_table = SymbolTable()
         vm_writer = VMWriter(filename.replace(".jack", ".vm"))
         parser = CompilationEngine(tokenizer, vm_writer, symbol_table)
+
+        # tokenizer.advance()
+
+        # symbol_table.define(
+        #     name="teste",
+        #     type="Teste",
+        #     kind="VAR"
+        # )
+
+        # symbol_table.define(
+        #     name="testando",
+        #     type="Testando",
+        #     kind="VAR"
+        # )
+
+        # symbol_table.define(
+        #     name="game",
+        #     type="PongGame",
+        #     kind="VAR"
+        # )
+
         parser.compile_class()
 
 
