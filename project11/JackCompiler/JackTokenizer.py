@@ -8,6 +8,8 @@ class JackTokenizer:
 
         self.__KEYWORDS = ("class", "constructor", "function", "method", "field", "static", "var", "int", "char", "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while", "return")
         self.__SYMBOLS = ("{", "}", "(", ")", "[", "]", ".", ",", ";", "+", "-", "*", "/", "&", "|", "<", ">", "=", "~")
+        
+        self.__count_lines = 0
 
     #####
     # API

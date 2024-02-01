@@ -3,10 +3,6 @@
 // by Nisan and Schocken, MIT Press.
 // File name: projects/11/Pong/PongGame.jack
 // (Same as projects/09/Pong/PongGame.jack)
-
-/**
- * Represents a Pong game.
- */
 class PongGame {
 
     static PongGame instance; // A Pong game     
@@ -20,7 +16,7 @@ class PongGame {
     // The current width of the bat
     field int batWidth;
 
-    /** Constructs a new Pong game. */
+    // Constructs a new Pong game. */
     constructor PongGame new() {
 	    do Screen.clearScreen();
         let batWidth = 50;  // initial bat size
@@ -39,7 +35,7 @@ class PongGame {
         return this;
     }
 
-    /** Deallocates the object's memory. */
+    //  Deallocates the object's memory. */
     method void dispose() {
         do bat.dispose();
 	    do ball.dispose();
@@ -47,19 +43,19 @@ class PongGame {
         return;
     }
 
-    /** Creates an instance of a Pong game. */
+    // Creates an instance of a Pong game. */
     function void newInstance() {
         let instance = PongGame.new();
         return;
     }
     
-    /** Returns this Pong game. */
+    //  Returns this Pong game. */
     function PongGame getInstance() {
         return instance;
     }
 
-    /** Starts the game, and handles inputs from the user that control
-     *  the bat's movement direction. */
+    //  Starts the game, and handles inputs from the user that control
+    //  the bat's movement direction. */
     method void run() {
         var char key;
 
@@ -97,12 +93,12 @@ class PongGame {
         return;
     }
 
-    /**
-     * Handles ball movement, including bouncing.
-     * If the ball bounces off a wall, finds its new direction.
-     * If the ball bounces off the bat, increases the score by one
-     * and shrinks the bat's size, to make the game more challenging. 
-     */
+    //
+    // Handles ball movement, including bouncing.
+    // If the ball bounces off a wall, finds its new direction.
+    // If the ball bounces off the bat, increases the score by one
+    // and shrinks the bat's size, to make the game more challenging. 
+    //
     method void moveBall() {
         var int bouncingDirection, batLeft, batRight, ballLeft, ballRight;
 

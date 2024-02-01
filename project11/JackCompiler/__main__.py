@@ -21,7 +21,7 @@ def single_jack(filename):
 
         # symbol_table.define(
         #     name="teste",
-        #     type="Teste",
+        #     type="int",
         #     kind="VAR"
         # )
 
@@ -37,6 +37,7 @@ def single_jack(filename):
         #     kind="VAR"
         # )
 
+        # parser.eat()
         parser.compile_class()
 
 

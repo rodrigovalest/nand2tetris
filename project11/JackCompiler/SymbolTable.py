@@ -78,3 +78,7 @@ class SymbolTable:
 
     # END API
     #########
+
+    def print_symbol_table(self):
+        print(self.__class_table)
+        print(self.__subroutine_table)

@@ -22,37 +22,28 @@ class CompilationEngine:
     def compile_class(self):
 
         # 'class'
-        self.__tokenizer.advance()
-        if self.__tokenizer.token_type() == "KEYWORD" and self.__tokenizer.get_current_token() == "class":
+        self.eat(["KEYWORD"], ["class"])
 
-            # className
-            self.__tokenizer.advance()
-            if self.__tokenizer.token_type() == "IDENTIFIER":
+        # className
+        self.eat(["IDENTIFIER"])
+        self.__classname = self.__tokenizer.get_current_token()
 
-                self.__classname = self.__tokenizer.get_current_token()
+        # '{'
+        self.eat(["SYMBOL"], ["{"])
 
-                # '{'
-                self.__tokenizer.advance()
-                if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "{":
+        # classVarDec*
+        while self.__tokenizer.get_next_token() in ["static", "field"]:
+            self.eat(["KEYWORD"], ["static", "field"])
+            self.compile_class_var_dec()
 
-                    # classVarDec*
-                    self.__tokenizer.advance()
-                    while self.__tokenizer.token_type() == "KEYWORD" and self.__tokenizer.get_current_token() in ["static", "field"]:
-                        self.compile_class_var_dec()
-                        self.__tokenizer.advance()
+        # subroutineDec*
+        while self.__tokenizer.get_next_token() in ["function", "method", "constructor"]:
+            self.eat(["KEYWORD"], ["function", "method", "constructor"])
+            self.compile_subroutine_dec()
 
-                    # subroutineDec*
-                    while self.__tokenizer.token_type() == "KEYWORD" and self.__tokenizer.get_current_token() in ["function", "method", "constructor"]:
-                        # print(self.__tokenizer.get_current_token())
-                        self.compile_subroutine_dec()
-                        self.__tokenizer.advance()
-                        self.__tokenizer.advance()
-                        # print(self.__tokenizer.get_current_token())
+        # '}'
+        self.eat(["SYMBOL"], ["}"])
 
-                    if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "}":
-                        return
-
-        raise SystemExit("ERROR: class")
 
 
     # ('static' | 'field') type varName (',' varName)* ';'
@@ -61,90 +52,93 @@ class CompilationEngine:
         varnames = []
 
         # ('static' | 'field')
-        if self.__tokenizer.token_type() == "KEYWORD" and self.__tokenizer.get_current_token() in ["static", "field"]:
-            varkind = self.__tokenizer.get_current_token()
+        self.eat(["KEYWORD"], ["static", "field"], False)
+        varkind = self.__tokenizer.get_current_token()
 
-            # type
-            self.__tokenizer.advance()
-            if self.__tokenizer.token_type() == "IDENTIFIER" or self.__tokenizer.get_current_token() in ["int", "char", "boolean"]:
-                vartype = self.__tokenizer.get_current_token()
+        # type
+        self.eat(["KEYWORD", "IDENTIFIER"])
+        vartype = self.__tokenizer.get_current_token()
 
-                # varName
-                self.__tokenizer.advance()
-                if self.__tokenizer.token_type() == "IDENTIFIER":
-                    varnames.append(self.__tokenizer.get_current_token())
+        # varName
+        self.eat(["IDENTIFIER"])
+        varnames.append(self.__tokenizer.get_current_token())
 
-                    # (',' varName)*
-                    self.__tokenizer.advance()
-                    while self.__tokenizer.get_current_token() == ",":
-                        self.__tokenizer.advance()
-                        if self.__tokenizer.token_type() == "IDENTIFIER": 
-                            varnames.append(self.__tokenizer.get_current_token())
-                            self.__tokenizer.advance()
-                        else:
-                            raise SystemExit("ERROR: class var dec")
+        # (',' varName)*
+        while self.__tokenizer.get_next_token() == ",":
+            self.eat(["SYMBOL"], [","])
+            self.eat(["IDENTIFIER"])
+            varnames.append(self.__tokenizer.get_current_token())            
 
-                    # ';'
-                    if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == ";":
-                        for varname in varnames:
-                            self.__symbol_table.define(
-                                name=varname,
-                                type=vartype,
-                                kind=varkind.upper()
-                            )
-
-                        return                  
-
-        raise SystemExit("ERROR: class var dec")
+        # ';'
+        self.eat(["SYMBOL"], [";"])
+        for varname in varnames:
+            self.__symbol_table.define(name=varname, type=vartype, kind=varkind.upper())
 
 
-    # ('constructor' | 'function' | 'method') ('void' | type) subroutineName '(' parameterList ')' subroutineBody
+
+    # ('constructor' | 'function' | 'method') ('void' | type) subroutineName '(' parameterList ')' '{' varDec* statements '}'
     def compile_subroutine_dec(self):
+
         # ('constructor' | 'function' | 'method')
-        if self.__tokenizer.token_type() == "KEYWORD" and self.__tokenizer.get_current_token() in ["function", "method", "constructor"]:
-            subroutine_type = self.__tokenizer.get_current_token()
+        self.eat(["KEYWORD"], ["function", "method", "constructor"], False)
+        subroutine_type = self.__tokenizer.get_current_token()
 
-            # ('void' | type)
-            self.__tokenizer.advance()
-            if self.__tokenizer.token_type() == "IDENTIFIER" or self.__tokenizer.get_current_token() in ["int", "char", "boolean", "void"]:              
-                return_type = self.__tokenizer.get_current_token()
+        if subroutine_type == "method":
+            self.__symbol_table.define(
+            name="this",
+            type=self.__classname,
+            kind="ARG"
+        )
 
-                # subroutineName
-                self.__tokenizer.advance()
-                if self.__tokenizer.token_type() == "IDENTIFIER":
+        # ('void' | type)
+        self.eat(["KEYWORD", "IDENTIFIER"])
+        return_type = self.__tokenizer.get_current_token()
 
-                    subroutine_name = self.__tokenizer.get_current_token()
+        # subroutineName
+        self.eat(["IDENTIFIER"])
+        subroutine_name = self.__tokenizer.get_current_token()
 
-                    # '('
-                    self.__tokenizer.advance()
-                    if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "(":
+        # '('
+        self.eat(["SYMBOL"], ["("])
 
-                        # parameterList
-                        self.__symbol_table.start_subroutine()
+        # parameterList
+        self.__symbol_table.start_subroutine()
 
-                        self.__tokenizer.advance()
-                        argcount = self.compile_parameter_list()
+        if self.__tokenizer.get_next_token() != ")":
+            self.eat()
+            self.compile_parameter_list()
 
-                        self.__vm_writer.write_function(f"{self.__classname}.{subroutine_name}", (argcount + 1))
+        argcount = self.__symbol_table.var_count("ARG")
+        self.__vm_writer.write_function(f"{self.__classname}.{subroutine_name}", argcount)
 
-                        if subroutine_type == "constructor":
-                            self.__vm_writer.write_push("CONST", argcount)
-                            self.__vm_writer.write_call("Memory.alloc", 1)
-                        else:
-                            self.__vm_writer.write_push("ARG", 0)
+        if subroutine_type == "constructor":
+            num_fields = self.__symbol_table.var_count("FIELD")
+            self.__vm_writer.write_push("CONST", num_fields)
+            self.__vm_writer.write_call("Memory.alloc", 1)
+            self.__vm_writer.write_pop("POINTER", 0)
+            
+        elif subroutine_type == "method":
+            self.__vm_writer.write_push("ARG", 0)
+            self.__vm_writer.write_pop("POINTER", 0)
 
-                        self.__vm_writer.write_pop("POINTER", 0)
-
-                        # ')'
-                        if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == ")":
+        # ')'
+        self.eat(["SYMBOL"], [")"])
                             
-                            # subroutineBody
-                            self.__tokenizer.advance()
-                            self.compile_subroutine_body()
-                            
-                            return
+        # '{'
+        self.eat(["SYMBOL"], ["{"])
+            
+        # varDec*
+        while self.__tokenizer.get_next_token() == "var":
+            self.eat(["KEYWORD"], ["var"])
+            self.compile_var_dec()
 
-        raise SystemExit("ERROR: subroutine dec")
+        # statements
+        if self.__tokenizer.get_next_token() != "}":
+            self.compile_statements()
+
+        # '}'
+        self.eat(["SYMBOL"], ["}"])
+
 
 
     # (type varName) (',' type varName)*
@@ -152,76 +146,38 @@ class CompilationEngine:
         vartype = None
         varname = None
         argcount = 0
-
+        
         if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == ")":
             return 0
 
         # type
-        if self.__tokenizer.token_type() == "IDENTIFIER" or self.__tokenizer.get_current_token() in ["int", "char", "boolean"]:
-            vartype = self.__tokenizer.get_current_token()
+        self.eat(["IDENTIFIER", "KEYWORD"], advance=False)
+        vartype = self.__tokenizer.get_current_token()
         
-            # varName
-            self.__tokenizer.advance()
-            if self.__tokenizer.token_type() == "IDENTIFIER":
-                varname = self.__tokenizer.get_current_token()
+        # varName
+        self.eat(["IDENTIFIER"])
+        varname = self.__tokenizer.get_current_token()
 
-                self.__symbol_table.define(
-                    name=varname,
-                    type=vartype,
-                    kind="ARG"
-                )
-                argcount += 1
+        self.__symbol_table.define(name=varname, type=vartype, kind="ARG")
+        argcount += 1
 
-                # (',' type varName)*
-                self.__tokenizer.advance()
-                while self.__tokenizer.get_current_token() == ",":
-                    self.__tokenizer.advance()
-                    if self.__tokenizer.token_type() == "IDENTIFIER" or self.__tokenizer.get_current_token() in ["int", "char", "boolean"]:
-                        vartype = self.__tokenizer.get_current_token()
-                    
-                        self.__tokenizer.advance()
-                        if self.__tokenizer.token_type() == "IDENTIFIER":
-                            varname = self.__tokenizer.get_current_token()
-                            self.__symbol_table.define(
-                                name=varname,
-                                type=vartype,
-                                kind="ARG"
-                            )
-                            argcount += 1
-                            self.__tokenizer.advance()
-                            continue
+        # (',' type varName)*
+        while self.__tokenizer.get_next_token() == ",":
+            self.eat(["SYMBOL"], [","])
 
-                    raise SystemExit("ERROR: parameter list")
+            self.eat(["IDENTIFIER", "KEYWORD"])
+            vartype = self.__tokenizer.get_current_token()
 
-                # '('
-                if self.__tokenizer.get_current_token() == ")":
-                    return argcount
-
-        raise SystemExit("ERROR: parameter list")
+            self.eat(["IDENTIFIER"])
+            varname = self.__tokenizer.get_current_token()
+            self.__symbol_table.define(name=varname, type=vartype, kind="ARG")
+            
+            argcount += 1
+            continue
+        
+        return argcount
     
-
-    # '{' varDec* statements '}'
-    def compile_subroutine_body(self):
-        # '{'
-        if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "{":
-            # varDec*
-            if self.__tokenizer.get_next_token() == "var":
-                while self.__tokenizer.get_next_token() == "var":
-                    self.__tokenizer.advance()
-                    self.compile_var_dec()
-
-            # statements
-            if self.__tokenizer.get_next_token() != "}":
-                self.compile_statements()
-                return
-
-            # '}'
-            self.__tokenizer.advance()
-            if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "}":
-                return
-
-        raise SystemExit("ERROR: subroutine body")
-
+    
 
     # 'var' type varName (',' varName)* ';'
     def compile_var_dec(self):
@@ -229,44 +185,33 @@ class CompilationEngine:
         varnames = []
 
         # 'var'
-        if self.__tokenizer.get_current_token() == "var":
-            
-            # type
-            self.__tokenizer.advance()
-            if (
-                self.__tokenizer.token_type() == "IDENTIFIER" 
-                or (self.__tokenizer.token_type() == "KEYWORD" and self.__tokenizer.get_current_token() in ["int", "char", "boolean"])
-            ):
-                vartype = self.__tokenizer.get_current_token()
+        self.eat(["KEYWORD"], ["var"], False)
+
+        # type
+        self.eat(["IDENTIFIER", "KEYWORD"])
+        vartype = self.__tokenizer.get_current_token()
                 
-                # varName
-                self.__tokenizer.advance()
-                if self.__tokenizer.token_type() == "IDENTIFIER":
-                    varnames.append(self.__tokenizer.get_current_token())
+        # varName
+        self.eat(["IDENTIFIER"])
+        varnames.append(self.__tokenizer.get_current_token())
 
-                    # (',' varName)*
-                    self.__tokenizer.advance()
-                    while self.__tokenizer.get_current_token() == ",":
-                        self.__tokenizer.advance()
-                        
-                        if self.__tokenizer.token_type() == "IDENTIFIER":
-                            varnames.append(self.__tokenizer.get_current_token())
-                            self.__tokenizer.advance()
-                        else:
-                            raise SystemExit("ERROR: var_dec")
+        # (',' varName)*
+        self.eat()
+        while self.__tokenizer.get_current_token() == ",":
+            self.eat()
+            
+            if self.__tokenizer.token_type() == "IDENTIFIER":
+                varnames.append(self.__tokenizer.get_current_token())
+                self.eat()
+            else:
+                raise SystemExit("ERROR: var_dec")
                     
-                    # ';'
-                    if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == ";":
-                        for varname in varnames:
-                            self.__symbol_table.define(
-                                name=varname,
-                                type=vartype,
-                                kind="VAR"
-                            )
-                        
-                        return
-
-        raise SystemExit("ERROR: var_dec")
+        # ';'
+        self.eat(["SYMBOL"], [";"], False)
+        
+        for varname in varnames: 
+            self.__symbol_table.define(name=varname, type=vartype, kind="VAR")
+            
 
 
     ## statements
@@ -289,53 +234,53 @@ class CompilationEngine:
                 raise SystemExit("ERROR: statements")
 
 
+
     # 'let' varName ('[' expression ']')? '=' expression ';'
     def compile_let(self):
 
         # 'let'
-        if self.__tokenizer.get_current_token() == "let":
+        self.eat(["KEYWORD"], ["let"], False)
             
-            # 'varName'
-            self.__tokenizer.advance() 
-            if self.__tokenizer.token_type() == "IDENTIFIER":
-                varname = self.__tokenizer.get_current_token()
+        # 'varName'
+        self.eat(["IDENTIFIER"])
+        varname = self.__tokenizer.get_current_token()
 
-                type = self.__symbol_table.type_of(varname)
-                index = self.__symbol_table.index_of(varname)
-                kind = self.__symbol_table.kind_of(varname)
-                segment = {"ARG": "ARG", "VAR": "LOCAL", "STATIC": "STATIC", "FIELD": "THIS"}.get(kind, None)
+        type = self.__symbol_table.type_of(varname)
+        index = self.__symbol_table.index_of(varname)
+        kind = self.__symbol_table.kind_of(varname)
+        segment = {"ARG": "ARG", "VAR": "LOCAL", "STATIC": "STATIC", "FIELD": "THIS"}.get(kind, None)
 
-                if type is None or index is None or kind is None:
-                    raise SystemExit("ERROR: let")
+        if type is None or index is None or kind is None:
+            raise SystemExit("ERROR: let")
 
-                self.__vm_writer.write_pop(
-                    segment=segment,
-                    index=index
-                )
+        self.__vm_writer.write_pop(
+            segment=segment,
+            index=index
+        )
 
-                # ('[' expression ']')?
-                self.__tokenizer.advance()
-                if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "[":
-                    return
-                
-                # '='
-                if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "=":
+        # ('[' expression ']')?
+        if self.__tokenizer.get_next_token() == "[":
+            self.eat(["SYMBOL"], ["["])
+            raise SystemExit("arrays implementation not done yet")
 
-                    # expression
-                    self.__tokenizer.advance()
-                    expression_type = self.compile_expression()
+        # '='
+        self.eat(["SYMBOL"], ["="])
+        
+        
+        # expression
+        self.eat()
+        expression_type = self.compile_expression()
 
-                    if (
-                        expression_type == "integer_expression" and type not in ["int", "boolean"]
-                        or expression_type == "string_expression" and type != "char"
-                    ):
-                        raise SystemExit("ERROR: let type don't match")
+        if (
+            expression_type == "integer_expression" and type not in ["int", "boolean"]
+            or expression_type == "string_expression" and type != "char"
+        ):
+            raise SystemExit("ERROR: let type don't match")
 
-                    # ';'
-                    if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == ";":
-                        return                 
+        # ';'
+        self.eat(["SYMBOL"], [";"], False)
 
-        raise SystemExit("ERROR: let")            
+
         
 
     # if '(' expression ')' '{' statements '}' ('else' '{' statements '}')?
@@ -345,59 +290,49 @@ class CompilationEngine:
         self.__label_count += 2
 
         # 'if'
-        if self.__tokenizer.get_current_token() == "if":
+        self.eat(["KEYWORD"], ["if"], False)
             
-            # '('
-            self.__tokenizer.advance()
-            if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "(":
-                
-                # expression
-                self.__tokenizer.advance()
-                self.compile_expression()
-                self.__vm_writer.write_arithmetic("not")
-                self.__vm_writer.write_if(label_else)
+        # '('
+        self.eat(["SYMBOL"], ["("])
+            
+        # expression
+        self.eat()
+        self.compile_expression()
+        self.__vm_writer.write_arithmetic("not")
+        self.__vm_writer.write_if(label_else)
 
-                # ')'
-                if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == ")":
+        # ')'
+        self.eat(["SYMBOL"], [")"], False)
 
-                    # '{'
-                    self.__tokenizer.advance()
-                    if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "{":
+        # '{'
+        self.eat(["SYMBOL"], ["{"])
                        
-                        # statements
-                        if self.__tokenizer.get_next_token() != "}":
-                            self.compile_statements()
+        # statements
+        if self.__tokenizer.get_next_token() != "}":
+            self.compile_statements()
                     
-                        # '}'
-                        self.__tokenizer.advance()
-                        if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "}":
-                            self.__vm_writer.write_goto(label_endif)
-                            self.__vm_writer.write_label(label_else)
+        # '}'
+        self.eat(["SYMBOL"], ["}"])
+        self.__vm_writer.write_goto(label_endif)
+        self.__vm_writer.write_label(label_else)
 
-                            # ('else' '{' statements '}')?
-                            if self.__tokenizer.has_more_tokens() and self.__tokenizer.get_next_token() == "else":
-                                self.__tokenizer.advance()
+        # ('else' '{' statements '}')?
+        if self.__tokenizer.get_next_token() == "else":
+            self.eat(["KEYWORD"], ["else"])
 
-                                # '{'
-                                self.__tokenizer.advance()
-                                if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "{":
-                                    
-                                    # statements
-                                    if self.__tokenizer.get_next_token() != "}":
-                                        self.compile_statements()
+            # '{'
+            self.eat(["SYMBOL"], ["{"])
+                
+            # statements
+            if self.__tokenizer.get_next_token() != "}":
+                self.compile_statements()
 
-                                    # '}'
-                                    self.__tokenizer.advance()
-                                    if self.__tokenizer.token_type() != "SYMBOL" or self.__tokenizer.get_current_token() != "}":
-                                        raise SystemExit("ERROR: else")
-                                else:
-                                    raise SystemExit("ERROR: else") 
+                # '}'
+                self.eat(["SYMBOL"], ["}"])
 
-                            self.__vm_writer.write_label(label_endif)
-                            return
+        self.__vm_writer.write_label(label_endif)
+        
             
-        raise SystemExit("ERROR: if") 
-
 
     # 'while' '(' expression ')' '{' statements '}'
     def compile_while(self):
@@ -406,84 +341,74 @@ class CompilationEngine:
         self.__label_count += 2
 
         # 'while'
-        if self.__tokenizer.get_current_token() == "while":
-            self.__vm_writer.write_label(label_initloop)
+        self.eat(["KEYWORD"], ["while"], False)
+        self.__vm_writer.write_label(label_initloop)
             
-            # '('
-            self.__tokenizer.advance()
-            if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "(":
+        # '('
+        self.eat(["SYMBOL"], ["("])
                 
-                # expression
-                self.__tokenizer.advance()
-                self.compile_expression()
-                self.__vm_writer.write_arithmetic("not")
-                self.__vm_writer.write_if(label_endloop)
+        # expression
+        self.eat()
+        self.compile_expression()
+        self.__vm_writer.write_arithmetic("not")
+        self.__vm_writer.write_if(label_endloop)
 
-                # ')'
-                if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == ")":
+        # ')'
+        self.eat(["SYMBOL"], [")"], False)
+        
+        # '{'
+        self.eat(["SYMBOL"], ["{"])
 
-                    # '{'
-                    self.__tokenizer.advance()
-                    if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "{":
+        # statements
+        if self.__tokenizer.get_next_token() != "}":
+            self.compile_statements()
 
-                        # statements
-                        if self.__tokenizer.get_next_token() != "}":
-                            self.compile_statements()
-
-                        # '}'
-                        self.__tokenizer.advance()
-                        if self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == "}":
-                            self.__vm_writer.write_goto(label_initloop)
-                            self.__vm_writer.write_label(label_endloop)
-                            return
+        # '}'
+        self.eat(["SYMBOL"], ["}"])
+        self.__vm_writer.write_goto(label_initloop)
+        self.__vm_writer.write_label(label_endloop)
             
-        raise SystemExit("ERROR: while")
 
 
     # 'do' subroutineCall ';'
-    # 'do' expression ';'
-    # expression = object expression
     def compile_do(self):
         
         # 'do'
-        if self.__tokenizer.get_current_token() == "do":
+        self.eat(["KEYWORD"], ["do"], False)
             
-            # expression?
-            self.__tokenizer.advance()
-            if self.__tokenizer.token_type() == "IDENTIFIER":
-                expression_type = self.compile_expression()
+        # expression?
+        self.eat(["IDENTIFIER"])
+        expression_type = self.compile_expression()
 
-                # ';'
-                if expression_type == "object_expression" and self.__tokenizer.token_type() == "SYMBOL" and self.__tokenizer.get_current_token() == ";":
-                    return
+        # ';'
+        self.eat(["SYMBOL"], [";"], False)
 
-        raise SystemExit("ERROR: do")
+        if expression_type != "object_expression": 
+            raise SystemExit("ERROR: expected object expression in do statement")
+
 
 
     # 'return' expression? ';'
     def compile_return(self):
 
         # 'return'
-        if self.__tokenizer.get_current_token() == "return":
+        self.eat(["KEYWORD"], ["return"], False)
             
-            # expression?
-            self.__tokenizer.advance()
-            if self.__tokenizer.get_current_token() != ";":
-                self.compile_expression()
-
-                # ';'
-                if self.__tokenizer.get_current_token() == ";":
-                    self.__vm_writer.write_return()
-                    return
+        # expression?
+        self.eat()
+        if self.__tokenizer.get_current_token() != ";":
+            self.compile_expression()
 
             # ';'
-            else:
-                self.__vm_writer.write_push("CONST", 0)
-                self.__vm_writer.write_return()
-                return                
+            self.eat(["SYMBOL"], [";"], False)
+            self.__vm_writer.write_return()
 
-        raise SystemExit("ERROR: return")
-            
+        # ';'
+        else:
+            self.__vm_writer.write_push("CONST", 0)
+            self.__vm_writer.write_return()
+        
+        
 
     ## expressions
 
@@ -772,3 +697,18 @@ class CompilationEngine:
 
         return expression_tokens
     
+
+    def eat(self, expected_types=None, expected_tokens=None, advance=True):
+
+        if expected_types and not all(t in ["IDENTIFIER", "SYMBOL", "STRING_CONST", "INT_CONST", "KEYWORD", None] for t in expected_types):
+            raise SystemError("ERROR: invalid expected types")
+
+        if advance: self.__tokenizer.advance()
+        current_token = self.__tokenizer.get_current_token()
+        current_type = self.__tokenizer.token_type()
+
+        if expected_tokens is None and expected_types and current_type not in expected_types:
+            raise SystemExit(f"ERROR: unexpected token type. Expected types: {expected_types}. Type: {current_type}. Token: {current_token}")
+
+        elif expected_tokens and current_token not in expected_tokens or expected_types and current_type not in expected_types:
+            raise SystemExit(f"ERROR: unexpected token. Expected tokens: {expected_tokens}. Token: {current_token}")
