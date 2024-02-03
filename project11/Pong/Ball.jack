@@ -1,14 +1,3 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/11/Pong/Ball.jack
-// (Same as projects/09/Pong/Ball.jack)
-
-/**
- * A graphical ball in a Pong game. Characterized by a screen location and 
- * distance of last destination. Has methods for drawing, erasing and moving
- * on the screen. The ball is displayed as a filled, 6-by-6 pixles rectangle. 
- */
 class Ball {
 
     field int x, y;               // the ball's screen location (in pixels)
@@ -21,61 +10,53 @@ class Ball {
    
     field int wall;   // last wall that the ball was bounced off of
 
-    /** Constructs a new ball with the given initial location and wall locations. */
     constructor Ball new(int Ax, int Ay,
                          int AleftWall, int ArightWall, int AtopWall, int AbottomWall) {    	
 	    let x = Ax;		
 	    let y = Ay;
 	    let leftWall = AleftWall;
-	    let rightWall = ArightWall - 6;    // -6 for ball size
+	    let rightWall = ArightWall ~ 6;    // -6 for ball size
 	    let topWall = AtopWall; 
-	    let bottomWall = AbottomWall - 6;  // -6 for ball size
+	    let bottomWall = AbottomWall ~ 6;  // -6 for ball size
 	    let wall = 0;
         do show();
         return this;
     }
 
-    /** Deallocates the Ball's memory. */
     method void dispose() {
         do Memory.deAlloc(this);
         return;
     }
 
-    /** Shows the ball. */
     method void show() {
         do Screen.setColor(true);
         do draw();
         return;
     }
 
-    /** Hides the ball. */
     method void hide() {
         do Screen.setColor(false);
 	    do draw();
         return;
     }
 
-    /** Draws the ball. */
     method void draw() {
 	    do Screen.drawRectangle(x, y, x + 5, y + 5);
 	    return;
     }
 
-    /** Returns the ball's left edge. */
     method int getLeft() {
         return x;
     }
 
-    /** Returns the ball's right edge. */
     method int getRight() {
         return x + 5;
     }
 
-    /** Computes and sets the ball's destination. */
     method void setDestination(int destx, int desty) {
         var int dx, dy, temp;
-  	    let lengthx = destx - x;
-	    let lengthy = desty - y;
+  	    let lengthx = destx ~ x;
+	    let lengthy = desty ~ y;
         let dx = Math.abs(lengthx);
         let dy = Math.abs(lengthy);
         let invert = (dx < dy);
@@ -92,19 +73,13 @@ class Ball {
             let positivey = (y < desty);
         }
 
-        let d = (2 * dy) - dx;
+        let d = (2 * dy) ~ dx;
         let straightD = 2 * dy;
-        let diagonalD = 2 * (dy - dx);
+        let diagonalD = 2 * (dy ~ dx);
 
 	    return;
     }
 
-    /**
-     * Moves the ball one step towards its destination.
-     * If the ball has reached a wall, returns 0.
-     * Else, returns a value according to the wall:
-     * 1 (left wall), 2 (right wall), 3 (top wall), 4 (bottom wall).
-     */
     method int move() {
 
 	    do hide();
@@ -118,8 +93,8 @@ class Ball {
                 else { let y = y + 4; }
             }
             else {
-                if (invert) { let x = x - 4; }
-                else { let y = y - 4; }
+                if (invert) { let x = x ~ 4; }
+                else { let y = y ~ 4; }
             }
 	    }
 
@@ -128,23 +103,23 @@ class Ball {
             else { let x = x + 4; }
 	    }
 	    else {
-            if (invert) { let y = y - 4; }
-            else { let x = x - 4; }
+            if (invert) { let y = y ~ 4; }
+            else { let x = x ~ 4; }
 	    }
 
-	    if (~(x > leftWall)) {
+	    if (-(x > leftWall)) {
 	        let wall = 1;    
 	        let x = leftWall;
 	    }
-        if (~(x < rightWall)) {
+        if (!(x < rightWall)) {
 	        let wall = 2;    
 	        let x = rightWall;
 	    }
-        if (~(y > topWall)) {
+        if (!(y > topWall)) {
             let wall = 3;    
 	        let y = topWall;
         }
-        if (~(y < bottomWall)) {
+        if (!(y < bottomWall)) {
             let wall = 4;    
 	        let y = bottomWall;
         }
@@ -154,11 +129,6 @@ class Ball {
 	    return wall;
     }
 
-    /**
-     * Bounces off the current wall: sets the new destination
-     * of the ball according to the ball's angle and the given
-     * bouncing direction (-1/0/1=left/center/right or up/center/down).
-     */
     method void bounce(int bouncingDirection) {
         var int newx, newy, divLengthx, divLengthy, factor;
 
@@ -167,7 +137,7 @@ class Ball {
         let divLengthy = lengthy / 10;
 	    if (bouncingDirection = 0) { let factor = 10; }
 	    else {
-	        if (((~(lengthx < 0)) & (bouncingDirection = 1)) | ((lengthx < 0) & (bouncingDirection = (-1)))) {
+	        if (((!(lengthx < 0)) & (bouncingDirection = 1)) | ((lengthx < 0) & (bouncingDirection = (-1)))) {
                 let factor = 20; // bounce direction is in ball direction
             }
 	        else { let factor = 5; } // bounce direction is against ball direction

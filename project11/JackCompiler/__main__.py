@@ -14,42 +14,34 @@ def single_jack(filename):
     with open(filename, "r") as jackfile:
         tokenizer = JackTokenizer(jackfile)
         symbol_table = SymbolTable()
-        vm_writer = VMWriter(filename.replace(".jack", ".vm"))
-        parser = CompilationEngine(tokenizer, vm_writer, symbol_table)
-
-        # tokenizer.advance()
-
-        # symbol_table.define(
-        #     name="teste",
-        #     type="int",
-        #     kind="VAR"
-        # )
-
-        # symbol_table.define(
-        #     name="testando",
-        #     type="Testando",
-        #     kind="VAR"
-        # )
-
-        # symbol_table.define(
-        #     name="game",
-        #     type="PongGame",
-        #     kind="VAR"
-        # )
-
-        # parser.eat()
+        generator = VMWriter(filename.replace(".jack", ".vm"))
+        parser = CompilationEngine(tokenizer, generator, symbol_table)
         parser.compile_class()
+        generator.close()
+
+
+def process_directory(directory):
+    jack_files = [f for f in os.listdir(directory) if f.endswith(".jack")]
+    for jack_file in jack_files:
+        jack_path = os.path.join(directory, jack_file)
+        single_jack(jack_path)
 
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python3 VMTranslator <vmfile.vm or directory>")
+        print("Usage: python3 VMTranslator <jackfile.jack or directory>")
         return
 
     input_path = sys.argv[1]
 
     if os.path.isfile(input_path) and input_path.endswith(".jack"):
         single_jack(input_path)
+    elif os.path.isdir(input_path):
+        process_directory(input_path)
+    else:
+        print("Invalid input. Provide a .jack file or a directory containing .jack files.")
+
 
 if __name__ == "__main__":
     main()
+

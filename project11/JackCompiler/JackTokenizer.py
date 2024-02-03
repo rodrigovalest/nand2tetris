@@ -7,9 +7,9 @@ class JackTokenizer:
         self.__current_token = None
 
         self.__KEYWORDS = ("class", "constructor", "function", "method", "field", "static", "var", "int", "char", "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while", "return")
-        self.__SYMBOLS = ("{", "}", "(", ")", "[", "]", ".", ",", ";", "+", "-", "*", "/", "&", "|", "<", ">", "=", "~")
+        self.__SYMBOLS = ("{", "}", "(", ")", "[", "]", ".", ",", ";", "+", "-", "*", "/", "&", "|", "<", ">", "=", "!", "~")
         
-        self.__count_lines = 0
+        self.__line_count = 0
 
     #####
     # API
@@ -31,6 +31,7 @@ class JackTokenizer:
     def advance(self):
         while len(self.__current_line) < 3 and self.has_more_lines():
             line = self.__file.readline()
+            self.__line_count += 1
             line = self.__sanitize(line)
 
             if line:
@@ -38,7 +39,6 @@ class JackTokenizer:
             
         if len(self.__current_line) != 0:
             self.__current_token = self.__current_line.pop(0)
-            # print(self.__current_token + " | " + self.token_type())
         else:
             self.__current_token = None
             raise SystemExit("Error (EOF)")
@@ -52,7 +52,7 @@ class JackTokenizer:
             return "KEYWORD"
         elif self.__current_token in self.__SYMBOLS:
             return "SYMBOL"
-        elif self.__current_token.isdigit() and 0 <= int(self.__current_token) <= 32767:
+        elif self.__current_token.isdigit():
             return "INT_CONST"
         elif re.match(r'^"[^"\n]*"$|^\'[^\n\']*\'$', self.__current_token):
             return "STRING_CONST"
@@ -123,4 +123,7 @@ class JackTokenizer:
             return self.__current_line[0]
         else:
             return None
+        
+    def get_line_count(self):
+        return self.__line_count
         

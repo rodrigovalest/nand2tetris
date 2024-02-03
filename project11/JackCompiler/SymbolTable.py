@@ -3,16 +3,8 @@ class SymbolTable:
         self.__class_table = {}
         self.__subroutine_table = {}
 
-        self.__kind_count = {
-            "STATIC": 0,
-            "FIELD": 0,
-            "ARG": 0,
-            "VAR": 0
-        }
-
     #####
     # API
-
 
     def start_subroutine(self):
         self.__subroutine_table = {}
@@ -26,25 +18,31 @@ class SymbolTable:
             self.__class_table[name] = {
                 "type": type,
                 "kind": kind,
-                "index": self.__kind_count[kind]
+                "index": self.var_count(kind, "class")
             }
         elif kind in ["ARG", "VAR"]:
             self.__subroutine_table[name] = {
                 "type": type,
                 "kind": kind,
-                "index": self.__kind_count[kind]
+                "index": self.var_count(kind, "subroutine")
             }
         else:
-            raise SystemExit("ERROR: symbol table define") 
-
-        self.__kind_count[kind] += 1
+            raise SystemExit("ERROR: symbol table define")
 
 
-    def var_count(self, kind):
-        if not kind in ["STATIC", "FIELD", "ARG", "VAR"]:
-            return
+    def var_count(self, kind, class_or_subroutine):
+        if kind not in ["STATIC", "FIELD", "ARG", "VAR"]:
+            return 0
 
-        return self.__kind_count[kind]
+        count = 0
+
+        if class_or_subroutine in ["class", "both"]:
+            count += sum(1 for entry in self.__class_table.values() if entry["kind"] == kind)
+
+        if class_or_subroutine in ["subroutine", "both"]:
+            count += sum(1 for entry in self.__subroutine_table.values() if entry["kind"] == kind)
+
+        return count
     
     
     # kind: [STATIC, FIELD, ARG, VAR]
